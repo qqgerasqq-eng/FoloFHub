@@ -1,4 +1,4 @@
--- FoloF Hub: Ultimate Edition (ESP, Speed, Jump, Fly, Noclip, Player List, Pro Fling & FPS Counter)
+-- FoloF Hub: Ultimate Edition (ESP, Speed, Jump, Fly, Noclip, Player List, Pro Fling, FPS & Ping Counter + Smooth Loading)
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
@@ -12,20 +12,114 @@ local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "FoloFHubModern"
 ScreenGui.Parent = CoreGui
 
-local MainFrame = Instance.new("Frame")
+-- ==================== ОКНО ЗАГРУЗКИ (LOADING SCREEN) ====================
+local LoadingFrame = Instance.new("Frame", ScreenGui)
+LoadingFrame.Size = UDim2.new(0, 320, 0, 160)
+LoadingFrame.Position = UDim2.new(0.5, -160, 0.5, -80)
+LoadingFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
+LoadingFrame.BackgroundTransparency = 1
+LoadingFrame.BorderSizePixel = 0
+Instance.new("UICorner", LoadingFrame).CornerRadius = UDim.new(0, 12)
+
+local LoadingStroke = Instance.new("UIStroke", LoadingFrame)
+LoadingStroke.Color = Color3.fromRGB(90, 70, 200)
+LoadingStroke.Transparency = 1
+LoadingStroke.Thickness = 1.5
+
+local LoadTitle = Instance.new("TextLabel", LoadingFrame)
+LoadTitle.Size = UDim2.new(1, 0, 0, 30)
+LoadTitle.Position = UDim2.new(0, 0, 0, 25)
+LoadTitle.BackgroundTransparency = 1
+LoadTitle.Text = "🐺 FoloF Hub 🐺"
+LoadTitle.TextColor3 = Color3.new(1, 1, 1)
+LoadTitle.TextSize, LoadTitle.Font = 18, Enum.Font.GothamBold
+LoadTitle.TextTransparency = 1
+
+local LoadStatus = Instance.new("TextLabel", LoadingFrame)
+LoadStatus.Size = UDim2.new(1, 0, 0, 20)
+LoadStatus.Position = UDim2.new(0, 0, 0, 60)
+LoadStatus.BackgroundTransparency = 1
+LoadStatus.Text = "Initializing..."
+LoadStatus.TextColor3 = Color3.fromRGB(170, 170, 180)
+LoadStatus.TextSize, LoadStatus.Font = 12, Enum.Font.GothamMedium
+LoadStatus.TextTransparency = 1
+
+-- Шкала загрузки (бар)
+local BarBackground = Instance.new("Frame", LoadingFrame)
+BarBackground.Size = UDim2.new(0, 260, 0, 8)
+BarBackground.Position = UDim2.new(0.5, -130, 0, 105)
+BarBackground.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+BarBackground.BackgroundTransparency = 1
+BarBackground.BorderSizePixel = 0
+Instance.new("UICorner", BarBackground).CornerRadius = UDim.new(1, 0)
+
+local BarFill = Instance.new("Frame", BarBackground)
+BarFill.Size = UDim2.new(0, 0, 1, 0)
+BarFill.BackgroundColor3 = Color3.fromRGB(90, 70, 200)
+BarFill.BackgroundTransparency = 1
+BarFill.BorderSizePixel = 0
+Instance.new("UICorner", BarFill).CornerRadius = UDim.new(1, 0)
+
+-- Главный фрейм (скрыт во время загрузки)
+local MainFrame = Instance.new("Frame", ScreenGui)
 MainFrame.Size = UDim2.new(0, 280, 0, 715)
 MainFrame.Position = UDim2.new(0, 100, 0, 100)
 MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
-MainFrame.BackgroundTransparency = 0.25
+MainFrame.BackgroundTransparency = 1
 MainFrame.BorderSizePixel = 0
 MainFrame.Active = true
 MainFrame.Draggable = true
-MainFrame.Parent = ScreenGui
+MainFrame.Visible = false
 
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 local UIStroke = Instance.new("UIStroke", MainFrame)
 UIStroke.Color = Color3.fromRGB(90, 70, 200)
 UIStroke.Thickness = 1.5
+
+-- Плавное появление экрана загрузки
+TweenService:Create(LoadingFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {BackgroundTransparency = 0.2}):Play()
+TweenService:Create(LoadingStroke, TweenInfo.new(0.4), {Transparency = 0}):Play()
+TweenService:Create(LoadTitle, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
+TweenService:Create(LoadStatus, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
+TweenService:Create(BarBackground, TweenInfo.new(0.4), {BackgroundTransparency = 0}):Play()
+TweenService:Create(BarFill, TweenInfo.new(0.4), {BackgroundTransparency = 0}):Play()
+
+-- Имитация процесса загрузки
+task.spawn(function()
+    task.wait(0.2)
+    LoadStatus.Text = "Loading modules..."
+    TweenService:Create(BarFill, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(0.6, 0, 1, 0)}):Play()
+    
+    task.wait(0.7)
+    LoadStatus.Text = "Configuring interface..."
+    TweenService:Create(BarFill, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = UDim2.new(1, 0, 1, 0)}):Play()
+    
+    task.wait(0.6)
+    LoadStatus.Text = "Done!"
+    
+    task.wait(0.3)
+    -- Плавное исчезновение экрана загрузки
+    TweenService:Create(LoadingFrame, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+    TweenService:Create(LoadingStroke, TweenInfo.new(0.4), {Transparency = 1}):Play()
+    TweenService:Create(LoadTitle, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+    TweenService:Create(LoadStatus, TweenInfo.new(0.4), {TextTransparency = 1}):Play()
+    TweenService:Create(BarBackground, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+    TweenService:Create(BarFill, TweenInfo.new(0.4), {BackgroundTransparency = 1}):Play()
+    task.wait(0.4)
+    LoadingFrame:Destroy()
+
+    -- Плавное появление главного меню с эффектом увеличения (Scale-In)
+    MainFrame.Visible = true
+    MainFrame.Size = UDim2.new(0, 220, 0, 550)
+    MainFrame.BackgroundTransparency = 1
+    
+    TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+        Size = UDim2.new(0, 280, 0, 715),
+        BackgroundTransparency = 0.25
+    }):Play()
+end)
+
+-- ==================== ИНТЕРФЕЙС И ФУНКЦИОНАЛ ====================
 
 -- Header
 local TopBar = Instance.new("Frame", MainFrame)
@@ -166,7 +260,7 @@ local SpeedSection = createSection("WalkSpeed", UDim2.new(0, 15, 0, 60))
 local JumpSection = createSection("Jump Power", UDim2.new(0, 15, 0, 110))
 local FlySection = createSection("Fly Mode", UDim2.new(0, 15, 0, 160))
 local NoclipSection = createSection("Noclip", UDim2.new(0, 15, 0, 210))
-local FPSSection = createSection("FPS Counter", UDim2.new(0, 15, 0, 260))
+local FPSSection = createSection("FPS & Ping Counter", UDim2.new(0, 15, 0, 260))
 
 local function createToggle(parent)
     local Toggle = Instance.new("TextButton", parent)
@@ -459,17 +553,17 @@ for _, p in ipairs(Players:GetPlayers()) do
     end
 end
 
--- ЛОГИКА FPS СЧЕТЧИКА
+-- ЛОГИКА FPS И ПИНГ СЧЕТЧИКА
 local fpsEnabled = false
 local fpsLabel = Instance.new("TextLabel", ScreenGui)
-fpsLabel.Size = UDim2.new(0, 120, 0, 30)
+fpsLabel.Size = UDim2.new(0, 160, 0, 30)
 fpsLabel.Position = UDim2.new(0, 15, 0, 15)
 fpsLabel.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
 fpsLabel.BackgroundTransparency = 0.4
 fpsLabel.TextColor3 = Color3.new(1, 1, 1)
-fpsLabel.TextSize = 14
+fpsLabel.TextSize = 13
 fpsLabel.Font = Enum.Font.GothamBold
-fpsLabel.Text = "FPS: 0"
+fpsLabel.Text = "FPS: 0 | Ping: 0ms"
 fpsLabel.Visible = false
 Instance.new("UICorner", fpsLabel).CornerRadius = UDim.new(0, 6)
 local fpsStroke = Instance.new("UIStroke", fpsLabel)
@@ -492,7 +586,12 @@ FPSToggle.MouseButton1Click:Connect(function()
             frameCount = frameCount + 1
             local currentTick = tick()
             if currentTick - lastTick >= 1 then
-                fpsLabel.Text = "FPS: " .. math.floor(frameCount / (currentTick - lastTick))
+                local fps = math.floor(frameCount / (currentTick - lastTick))
+                local ping = 0
+                pcall(function()
+                    ping = math.floor(LocalPlayer:GetNetworkPing() * 1000)
+                end)
+                fpsLabel.Text = "FPS: " .. fps .. " | Ping: " .. ping .. "ms"
                 frameCount = 0
                 lastTick = currentTick
             end
@@ -664,7 +763,7 @@ local function updateList()
     for _, child in ipairs(PlayerListFrame:GetChildren()) do
         if child:IsA("TextButton") then child:Destroy() end
     end
-    count = 0
+    local count = 0
     for _, p in ipairs(Players:GetPlayers()) do
         if p ~= LocalPlayer then
             count = count + 1
@@ -695,7 +794,7 @@ Players.PlayerAdded:Connect(updateList)
 Players.PlayerRemoving:Connect(updateList)
 updateList()
 
--- Кнопка Флинга (быстрое покачивание вправо-влёво впритык к игроку)
+-- Кнопка Флинга
 local FlingBtn = Instance.new("TextButton", Container)
 FlingBtn.Size, FlingBtn.Position = UDim2.new(1, -30, 0, 38), UDim2.new(0, 15, 0, 455)
 FlingBtn.BackgroundColor3, FlingBtn.Text = Color3.fromRGB(90, 70, 200), "START PRO FLING"
@@ -715,7 +814,6 @@ FlingBtn.MouseButton1Click:Connect(function()
         if tick() - startT < 1.5 then
             local targetHrp = SelectedTarget.Character and SelectedTarget.Character:FindFirstChild("HumanoidRootPart")
             if targetHrp and hrp then
-                -- Маленькое смещение (0.8 студии), чтобы персонаж оставался в касании с целью, но очень быстро двигался вправо-влево
                 local offset = math.sin(tick() * 60) * 0.8
                 hrp.CFrame = targetHrp.CFrame * CFrame.new(offset, 0, 0)
                 hrp.Velocity = Vector3.new(99999, 99999, 99999)
