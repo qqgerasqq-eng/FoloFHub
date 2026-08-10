@@ -1,4 +1,4 @@
--- FoloF Hub: Ultimate Edition (ESP, Speed, Jump, Fly, Noclip, Player List, Pro Fling, FPS & Ping Counter, FPS Boost + Smooth Loading)
+-- FoloF Hub: Ultimate Edition (ESP, Speed, Jump, Fly, Noclip, Player List, Pro Fling, FPS & Ping Counter, Ultra FPS Boost + Smooth Loading)
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
@@ -262,7 +262,7 @@ local JumpSection = createSection("Jump Power", UDim2.new(0, 15, 0, 110))
 local FlySection = createSection("Fly Mode", UDim2.new(0, 15, 0, 160))
 local NoclipSection = createSection("Noclip", UDim2.new(0, 15, 0, 210))
 local FPSSection = createSection("FPS & Ping Counter", UDim2.new(0, 15, 0, 260))
-local BoostSection = createSection("FPS Boost (No Lag)", UDim2.new(0, 15, 0, 310))
+local BoostSection = createSection("FPS Boost (Ultra)", UDim2.new(0, 15, 0, 310))
 
 local function createToggle(parent)
     local Toggle = Instance.new("TextButton", parent)
@@ -607,7 +607,7 @@ FPSToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- ==================== ЛОГИКА FPS BOOST (УДАЛЕНИЕ ЛАГОВ) ====================
+-- ==================== ЛОГИКА ULTRA FPS BOOST ====================
 local boostEnabled = false
 
 BoostToggle.MouseButton1Click:Connect(function()
@@ -617,28 +617,31 @@ BoostToggle.MouseButton1Click:Connect(function()
     BoostToggle.BackgroundColor3 = boostEnabled and Color3.fromRGB(90, 70, 200) or Color3.fromRGB(45, 45, 55)
 
     if boostEnabled then
-        -- Отключаем тени и тяжелые графические эффекты мира
+        -- 1. Полное отключение теней и тяжелых графических эффектов мира
         Lighting.GlobalShadows = false
         Lighting.FogEnd = 999999
+        Lighting.Brightness = 2
+        
         for _, v in ipairs(Lighting:GetChildren()) do
-            if v:IsA("PostEffect") or v:IsA("Sky") or v:IsA("Atmosphere") or v:IsA("Clouds") then
+            if v:IsA("PostEffect") or v:IsA("Sky") or v:IsA("Atmosphere") or v:IsA("Clouds") or v:IsA("DepthOfFieldEffect") or v:IsA("BloomEffect") or v:IsA("BlurEffect") or v:IsA("SunRaysEffect") then
                 v.Enabled = false
             end
         end
 
-        -- Убираем детали и текстуры со всех объектов для максимальной плавности
+        -- 2. Замена всех сложных текстур и материалов на SmoothPlastic с сохранением изначального цвета
         for _, v in ipairs(workspace:GetDescendants()) do
-            if v:IsA("BasePart") then
+            if v:IsA("BasePart") and not v:IsDescendantOf(LocalPlayer.Character) then
                 v.Material = Enum.Material.SmoothPlastic
                 v.Reflectance = 0
-            elseif v:IsA("Decal") or v:IsA("Texture") then
+                v.CastShadow = false
+            elseif v:IsA("Decal") or v:IsA("Texture") or v:IsA("SpecialMesh") then
                 v.Transparency = 1
-            elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") then
+            elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") or v:IsA("Beam") then
                 v.Enabled = false
             end
         end
     else
-        -- Возвращаем базовые настройки освещения (при выключении буста)
+        -- Возвращаем стандартные настройки при выключении
         Lighting.GlobalShadows = true
         for _, v in ipairs(Lighting:GetChildren()) do
             if v:IsA("PostEffect") or v:IsA("Sky") or v:IsA("Atmosphere") or v:IsA("Clouds") then
