@@ -1,9 +1,10 @@
--- FoloF Hub: Ultimate Edition (ESP, Speed, Jump, Fly, Noclip, Player List, Pro Fling, FPS & Ping Counter + Smooth Loading)
+-- FoloF Hub: Ultimate Edition (ESP, Speed, Jump, Fly, Noclip, Player List, Pro Fling, FPS & Ping Counter, FPS Boost + Smooth Loading)
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local GuiService = game:GetService("GuiService")
+local Lighting = game:GetService("Lighting")
 local LocalPlayer = Players.LocalPlayer
 local CoreGui = game:GetService("CoreGui")
 
@@ -62,7 +63,7 @@ Instance.new("UICorner", BarFill).CornerRadius = UDim.new(1, 0)
 
 -- Главный фрейм (скрыт во время загрузки)
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 280, 0, 715)
+MainFrame.Size = UDim2.new(0, 280, 0, 760)
 MainFrame.Position = UDim2.new(0, 100, 0, 100)
 MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
 MainFrame.BackgroundTransparency = 1
@@ -114,7 +115,7 @@ task.spawn(function()
     MainFrame.BackgroundTransparency = 1
     
     TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
-        Size = UDim2.new(0, 280, 0, 715),
+        Size = UDim2.new(0, 280, 0, 760),
         BackgroundTransparency = 0.25
     }):Play()
 end)
@@ -225,7 +226,7 @@ end)
 local minimized = false
 MinimizeButton.MouseButton1Click:Connect(function()
     minimized = not minimized
-    local targetSize = minimized and UDim2.new(0, 280, 0, 45) or UDim2.new(0, 280, 0, 715)
+    local targetSize = minimized and UDim2.new(0, 280, 0, 45) or UDim2.new(0, 280, 0, 760)
     TweenService:Create(MainFrame, TweenInfo.new(0.3), {Size = targetSize}):Play()
     for _, child in ipairs(MainFrame:GetChildren()) do
         if child ~= TopBar and not child:IsA("UICorner") and not child:IsA("UIStroke") then
@@ -237,7 +238,7 @@ end)
 -- Контейнер
 local Container = Instance.new("ScrollingFrame", MainFrame)
 Container.Size, Container.Position = UDim2.new(1, 0, 1, -45), UDim2.new(0, 0, 0, 45)
-Container.BackgroundTransparency, Container.CanvasSize = 1, UDim2.new(0, 0, 0, 620)
+Container.BackgroundTransparency, Container.CanvasSize = 1, UDim2.new(0, 0, 0, 670)
 Container.ScrollBarThickness = 3
 
 -- Секции
@@ -261,6 +262,7 @@ local JumpSection = createSection("Jump Power", UDim2.new(0, 15, 0, 110))
 local FlySection = createSection("Fly Mode", UDim2.new(0, 15, 0, 160))
 local NoclipSection = createSection("Noclip", UDim2.new(0, 15, 0, 210))
 local FPSSection = createSection("FPS & Ping Counter", UDim2.new(0, 15, 0, 260))
+local BoostSection = createSection("FPS Boost (No Lag)", UDim2.new(0, 15, 0, 310))
 
 local function createToggle(parent)
     local Toggle = Instance.new("TextButton", parent)
@@ -280,6 +282,7 @@ local JumpToggle, JumpCircle = createToggle(JumpSection)
 local FlyToggle, FlyCircle = createToggle(FlySection)
 local NoclipToggle, NoclipCircle = createToggle(NoclipSection)
 local FPSToggle, FPSCircle = createToggle(FPSSection)
+local BoostToggle, BoostCircle = createToggle(BoostSection)
 
 local function createInput(parent)
     local Box = Instance.new("TextBox", parent)
@@ -604,6 +607,47 @@ FPSToggle.MouseButton1Click:Connect(function()
     end
 end)
 
+-- ==================== ЛОГИКА FPS BOOST (УДАЛЕНИЕ ЛАГОВ) ====================
+local boostEnabled = false
+
+BoostToggle.MouseButton1Click:Connect(function()
+    boostEnabled = not boostEnabled
+    BoostCircle:TweenPosition(boostEnabled and UDim2.new(0, 23, 0.5, -8) or UDim2.new(0, 3, 0.5, -8), "Out", "Quad", 0.15, true)
+    BoostCircle.BackgroundColor3 = boostEnabled and Color3.new(1, 1, 1) or Color3.fromRGB(150, 150, 160)
+    BoostToggle.BackgroundColor3 = boostEnabled and Color3.fromRGB(90, 70, 200) or Color3.fromRGB(45, 45, 55)
+
+    if boostEnabled then
+        -- Отключаем тени и тяжелые графические эффекты мира
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 999999
+        for _, v in ipairs(Lighting:GetChildren()) do
+            if v:IsA("PostEffect") or v:IsA("Sky") or v:IsA("Atmosphere") or v:IsA("Clouds") then
+                v.Enabled = false
+            end
+        end
+
+        -- Убираем детали и текстуры со всех объектов для максимальной плавности
+        for _, v in ipairs(workspace:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.Material = Enum.Material.SmoothPlastic
+                v.Reflectance = 0
+            elseif v:IsA("Decal") or v:IsA("Texture") then
+                v.Transparency = 1
+            elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") then
+                v.Enabled = false
+            end
+        end
+    else
+        -- Возвращаем базовые настройки освещения (при выключении буста)
+        Lighting.GlobalShadows = true
+        for _, v in ipairs(Lighting:GetChildren()) do
+            if v:IsA("PostEffect") or v:IsA("Sky") or v:IsA("Atmosphere") or v:IsA("Clouds") then
+                v.Enabled = true
+            end
+        end
+    end
+end)
+
 -- Скорость и Прыжок
 local function updateHumanoid()
     local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
@@ -750,7 +794,7 @@ end)
 local SelectedTarget = nil
 
 local PlayerListFrame = Instance.new("ScrollingFrame", Container)
-PlayerListFrame.Size, PlayerListFrame.Position = UDim2.new(1, -30, 0, 130), UDim2.new(0, 15, 0, 315)
+PlayerListFrame.Size, PlayerListFrame.Position = UDim2.new(1, -30, 0, 130), UDim2.new(0, 15, 0, 360)
 PlayerListFrame.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
 PlayerListFrame.BackgroundTransparency = 0.3
 PlayerListFrame.BorderSizePixel = 0
@@ -796,7 +840,7 @@ updateList()
 
 -- Кнопка Флинга
 local FlingBtn = Instance.new("TextButton", Container)
-FlingBtn.Size, FlingBtn.Position = UDim2.new(1, -30, 0, 38), UDim2.new(0, 15, 0, 455)
+FlingBtn.Size, FlingBtn.Position = UDim2.new(1, -30, 0, 38), UDim2.new(0, 15, 0, 500)
 FlingBtn.BackgroundColor3, FlingBtn.Text = Color3.fromRGB(90, 70, 200), "START PRO FLING"
 FlingBtn.TextColor3, FlingBtn.TextSize, FlingBtn.Font = Color3.new(1, 1, 1), 13, Enum.Font.GothamBold
 Instance.new("UICorner", FlingBtn).CornerRadius = UDim.new(0, 8)
