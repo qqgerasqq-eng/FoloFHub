@@ -1,4 +1,4 @@
--- FoloF Hub: Hard Locked Aimbot & MAXIMUM EXTREME 0-LAG PERFORMANCE BOOST
+-- FoloF Hub: Ultimate Edition (Aimbot, ESP, Fly, Noclip, Fling & MAX FPS Boost)
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
@@ -194,7 +194,7 @@ local InfoDesc = Instance.new("TextLabel", InfoFrame)
 InfoDesc.Size = UDim2.new(1, -20, 0, 80)
 InfoDesc.Position = UDim2.new(0, 10, 0, 40)
 InfoDesc.BackgroundTransparency = 1
-InfoDesc.Text = "FoloF Hub Ultimate Edition\nPure Closest Target Lock (No FOV)\nPress 'B' to toggle Aimbot!"
+InfoDesc.Text = "FoloF Hub Ultimate Edition\nPure Closest Target Lock & MAX FPS Boost\nPress 'B' to toggle Aimbot!"
 InfoDesc.TextColor3 = Color3.fromRGB(200, 200, 210)
 InfoDesc.TextSize = 12
 InfoDesc.Font = Enum.Font.GothamMedium
@@ -248,7 +248,7 @@ local FlySection = createSection("Fly Mode", 160)
 local NoclipSection = createSection("Noclip", 210)
 local FPSSection = createSection("FPS Counter", 260)
 local AimbotSection = createSection("Aimbot (Head Lock)", 310)
-local BoostSection = createSection("GOD MODE FPS BOOST (0 Lags)", 360)
+local BoostSection = createSection("MAX FPS BOOST", 360)
 
 -- Переключатели
 local function createToggle(parent)
@@ -435,7 +435,7 @@ JumpToggle.MouseButton1Click:Connect(function() toggleLogic(JumpToggle, JumpCirc
 SpeedBox.FocusLost:Connect(updateHumanoid)
 JumpBox.FocusLost:Connect(updateHumanoid)
 
--- Чистый Aimbot (на ближайшего врага с лимитом дистанции, без фова и исключая себя)
+-- Чистый Aimbot
 local aimbotActive = false
 local lockedTarget = nil
 
@@ -514,18 +514,21 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- МАКСИМАЛЬНЫЙ GOD MODE FPS BOOST (Абсолютное отключение всей графики, звуков, света, эффектов)
+-- МАКСИМАЛЬНЫЙ FPS BOOST (Удаление текстур, теней и оптимизация графики)
 local boostEnabled = false
 local newPartConnection = nil
 
-local function godModeOptimize(item)
+local function stripTexturesAndColor(item)
     if item:IsA("BasePart") then
         item.Material = Enum.Material.SmoothPlastic
         item.Reflectance = 0
         item.CastShadow = false
-        item.Color = Color3.fromRGB(100, 100, 100)
-        item.CanQuery = false -- Выключает просчет лучей для физики (дает огромный прирост FPS)
+        item.CanQuery = false
+        if item.Color == Color3.new(0, 0, 0) or item.Color == Color3.new(1, 1, 1) then
+            item.Color = Color3.fromRGB(140, 140, 140)
+        end
         if item:IsA("MeshPart") then
+            item.TextureID = ""
             item.RenderFidelity = Enum.RenderFidelity.Performance
             item.CollisionFidelity = Enum.CollisionFidelity.Box
         end
@@ -558,39 +561,34 @@ BoostToggle.MouseButton1Click:Connect(function()
         
         Lighting.GlobalShadows = false
         Lighting.FogEnd = 9e9
-        Lighting.Brightness = 3
-        Lighting.ClockTime = 12
-        Lighting.OutdoorAmbient = Color3.fromRGB(150, 150, 150)
+        Lighting.Brightness = 2
+        Lighting.ClockTime = 14
         
-        -- Уничтожаем весь свет и окружение
         for _, v in ipairs(Lighting:GetChildren()) do
             v:Destroy()
         end
         
-        -- Полное уничтожение террейна (воды и травы)
         if Terrain then
             Terrain.WaterWaveSize = 0
             Terrain.WaterWaveSpeed = 0
-            Terrain.WaterTransparency = 1
+            Terrain.WaterTransparency = 0.5
             Terrain.WaterReflectance = 0
             Terrain.Decoration = false
-            Terrain.WaterColor = Color3.new(0,0,0)
+            Terrain.WaterColor = Color3.fromRGB(50, 100, 150)
         end
         
-        -- Вырубаем физику и коллизии ненужного мусора в Workspace, кроме игроков
         for _, obj in ipairs(workspace:GetDescendants()) do
             if not obj:IsDescendantOf(Players) then
-                godModeOptimize(obj)
+                stripTexturesAndColor(obj)
             end
         end
         
-        -- Мощнейший перехватчик: удаляет любые новые лаги и объекты на корню
         if not newPartConnection then
             newPartConnection = workspace.DescendantAdded:Connect(function(obj)
                 if boostEnabled and not obj:IsDescendantOf(LocalPlayer.Character) and not obj:IsDescendantOf(Players) then
                     task.spawn(function()
                         pcall(function()
-                            godModeOptimize(obj)
+                            stripTexturesAndColor(obj)
                         end)
                     end)
                 end
