@@ -1,4 +1,4 @@
--- FoloF Hub: Hard Locked Aimbot (No FOV, Pure Closest Target, Team Check, Max Distance, Anti-Self, Powerful FPS Boost)
+-- FoloF Hub: Hard Locked Aimbot & MAXIMUM EXTREME 0-LAG PERFORMANCE BOOST
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
@@ -248,7 +248,7 @@ local FlySection = createSection("Fly Mode", 160)
 local NoclipSection = createSection("Noclip", 210)
 local FPSSection = createSection("FPS Counter", 260)
 local AimbotSection = createSection("Aimbot (Head Lock)", 310)
-local BoostSection = createSection("Powerful FPS Boost", 360)
+local BoostSection = createSection("GOD MODE FPS BOOST (0 Lags)", 360)
 
 -- Переключатели
 local function createToggle(parent)
@@ -440,9 +440,7 @@ local aimbotActive = false
 local lockedTarget = nil
 
 local function isEnemy(player)
-    -- Исключаем самого себя
     if player == LocalPlayer then return false end
-    -- Исключаем тиммейтов (если они есть)
     if player.Team and LocalPlayer.Team and player.Team == LocalPlayer.Team then
         return false
     end
@@ -458,7 +456,6 @@ local function getClosestTarget()
     local shortestDist = maxDist
     
     for _, p in ipairs(Players:GetPlayers()) do
-        -- Дополнительная проверка: p ~= LocalPlayer гарантирует, что мы не выберем себя
         if p ~= LocalPlayer and isEnemy(p) and p.Character then
             local hum = p.Character:FindFirstChild("Humanoid")
             local head = p.Character:FindFirstChild("Head")
@@ -505,7 +502,6 @@ RunService.RenderStepped:Connect(function()
             lockedTarget = getClosestTarget()
         end
         
-        -- Двойная защита: если цель случайно оказалась нашим собственным персонажем, сбрасываем её
         if lockedTarget and lockedTarget:IsDescendantOf(LocalPlayer.Character) then
             lockedTarget = nil
         end
@@ -518,8 +514,34 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- Мощный FPS Boost (Удаление теней, текстур, уменьшение графики)
+-- МАКСИМАЛЬНЫЙ GOD MODE FPS BOOST (Абсолютное отключение всей графики, звуков, света, эффектов)
 local boostEnabled = false
+local newPartConnection = nil
+
+local function godModeOptimize(item)
+    if item:IsA("BasePart") then
+        item.Material = Enum.Material.SmoothPlastic
+        item.Reflectance = 0
+        item.CastShadow = false
+        item.Color = Color3.fromRGB(100, 100, 100)
+        item.CanQuery = false -- Выключает просчет лучей для физики (дает огромный прирост FPS)
+        if item:IsA("MeshPart") then
+            item.RenderFidelity = Enum.RenderFidelity.Performance
+            item.CollisionFidelity = Enum.CollisionFidelity.Box
+        end
+    elseif item:IsA("Decal") or item:IsA("Texture") or item:IsA("Beam") or item:IsA("ParticleEmitter") or item:IsA("Trail") or item:IsA("Fire") or item:IsA("Smoke") or item:IsA("Sparkles") or item:IsA("Explosion") or item:IsA("Highlight") then
+        item:Destroy()
+    elseif item:IsA("SpecialMesh") then
+        item.TextureId = ""
+        item.MeshId = ""
+    elseif item:IsA("Sound") or item:IsA("AudioPlayer") then
+        item.Volume = 0
+        item:Destroy()
+    elseif item:IsA("Light") or item:IsA("PostEffect") then
+        item:Destroy()
+    end
+end
+
 BoostToggle.MouseButton1Click:Connect(function()
     boostEnabled = not boostEnabled
     BoostCircle:TweenPosition(boostEnabled and UDim2.new(0, 23, 0.5, -8) or UDim2.new(0, 3, 0.5, -8), "Out", "Quad", 0.15, true)
@@ -527,27 +549,57 @@ BoostToggle.MouseButton1Click:Connect(function()
     BoostToggle.BackgroundColor3 = boostEnabled and Color3.fromRGB(90, 70, 200) or Color3.fromRGB(45, 45, 55)
     
     if boostEnabled then
-        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+        pcall(function()
+            settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+            settings().Rendering.MeshPartDetailLevel = Enum.MeshPartDetailLevel.Level01
+            workspace.LevelOfDetail = Enum.ModelStreamingMode.Atomic
+            UserSettings().GameSettings.MasterVolume = 0
+        end)
+        
         Lighting.GlobalShadows = false
         Lighting.FogEnd = 9e9
+        Lighting.Brightness = 3
+        Lighting.ClockTime = 12
+        Lighting.OutdoorAmbient = Color3.fromRGB(150, 150, 150)
+        
+        -- Уничтожаем весь свет и окружение
         for _, v in ipairs(Lighting:GetChildren()) do
-            if v:IsA("PostEffect") or v:IsA("Sky") then
-                v.Enabled = false
-            end
+            v:Destroy()
         end
+        
+        -- Полное уничтожение террейна (воды и травы)
         if Terrain then
             Terrain.WaterWaveSize = 0
-            Terrain.WaterWaveTransparency = 1
+            Terrain.WaterWaveSpeed = 0
             Terrain.WaterTransparency = 1
             Terrain.WaterReflectance = 0
+            Terrain.Decoration = false
+            Terrain.WaterColor = Color3.new(0,0,0)
         end
-        for _, part in ipairs(workspace:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.Material = Enum.Material.SmoothPlastic
-                part.Reflectance = 0
-            elseif part:IsA("Decal") or part:IsA("Texture") then
-                part.Transparency = 1
+        
+        -- Вырубаем физику и коллизии ненужного мусора в Workspace, кроме игроков
+        for _, obj in ipairs(workspace:GetDescendants()) do
+            if not obj:IsDescendantOf(Players) then
+                godModeOptimize(obj)
             end
+        end
+        
+        -- Мощнейший перехватчик: удаляет любые новые лаги и объекты на корню
+        if not newPartConnection then
+            newPartConnection = workspace.DescendantAdded:Connect(function(obj)
+                if boostEnabled and not obj:IsDescendantOf(LocalPlayer.Character) and not obj:IsDescendantOf(Players) then
+                    task.spawn(function()
+                        pcall(function()
+                            godModeOptimize(obj)
+                        end)
+                    end)
+                end
+            end)
+        end
+    else
+        if newPartConnection then
+            newPartConnection:Disconnect()
+            newPartConnection = nil
         end
     end
 end)
