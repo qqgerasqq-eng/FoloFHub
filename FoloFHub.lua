@@ -1,8 +1,10 @@
--- FoloF Hub: Hard Locked Aimbot (No FOV, Pure Closest Target, Team Check)
+-- FoloF Hub: Hard Locked Aimbot (No FOV, Pure Closest Target, Team Check, Max Distance, Anti-Self, Powerful FPS Boost)
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+local Terrain = workspace:FindFirstChildOfClass("Terrain")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
@@ -13,7 +15,7 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 300, 0, 380)
+MainFrame.Size = UDim2.new(0, 300, 0, 430)
 MainFrame.Position = UDim2.new(0, 100, 0, 100)
 MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
 MainFrame.BackgroundTransparency = 0.25
@@ -86,7 +88,7 @@ Instance.new("UICorner", InfoButton).CornerRadius = UDim.new(0, 6)
 local minimized = false
 MinimizeButton.MouseButton1Click:Connect(function()
     minimized = not minimized
-    local targetSize = minimized and UDim2.new(0, MainFrame.AbsoluteSize.X, 0, 45) or UDim2.new(0, MainFrame.AbsoluteSize.X, 0, 380)
+    local targetSize = minimized and UDim2.new(0, MainFrame.AbsoluteSize.X, 0, 45) or UDim2.new(0, MainFrame.AbsoluteSize.X, 0, 430)
     TweenService:Create(MainFrame, TweenInfo.new(0.3), {Size = targetSize}):Play()
     for _, child in ipairs(MainFrame:GetChildren()) do
         if child ~= TopBar and not child:IsA("UICorner") and not child:IsA("UIStroke") then
@@ -216,7 +218,7 @@ local Container = Instance.new("ScrollingFrame", MainFrame)
 Container.Size = UDim2.new(1, 0, 1, -45)
 Container.Position = UDim2.new(0, 0, 0, 45)
 Container.BackgroundTransparency = 1
-Container.CanvasSize = UDim2.new(0, 0, 0, 780)
+Container.CanvasSize = UDim2.new(0, 0, 0, 840)
 Container.ScrollBarThickness = 4
 
 local function createSection(name, posY)
@@ -246,6 +248,7 @@ local FlySection = createSection("Fly Mode", 160)
 local NoclipSection = createSection("Noclip", 210)
 local FPSSection = createSection("FPS Counter", 260)
 local AimbotSection = createSection("Aimbot (Head Lock)", 310)
+local BoostSection = createSection("Powerful FPS Boost", 360)
 
 -- Переключатели
 local function createToggle(parent)
@@ -271,12 +274,13 @@ local FlyToggle, FlyCircle = createToggle(FlySection)
 local NoclipToggle, NoclipCircle = createToggle(NoclipSection)
 local FPSToggle, FPSCircle = createToggle(FPSSection)
 local AimToggle, AimCircle = createToggle(AimbotSection)
+local BoostToggle, BoostCircle = createToggle(BoostSection)
 
 -- Поля ввода
-local function createInput(parent, defaultText)
+local function createInput(parent, defaultText, posX)
     local Box = Instance.new("TextBox", parent)
     Box.Size = UDim2.new(0, 45, 0, 24)
-    Box.Position = UDim2.new(1, -105, 0.5, -12)
+    Box.Position = UDim2.new(1, posX or -105, 0.5, -12)
     Box.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
     Box.Text = defaultText or "50"
     Box.TextColor3 = Color3.new(1, 1, 1)
@@ -289,6 +293,7 @@ end
 local SpeedBox = createInput(SpeedSection, "50")
 local JumpBox = createInput(JumpSection, "50")
 local FlyBox = createInput(FlySection, "50")
+local DistanceBox = createInput(AimbotSection, "500")
 
 -- ESP Логика
 local ESPColor = Color3.fromRGB(140, 0, 255)
@@ -430,12 +435,14 @@ JumpToggle.MouseButton1Click:Connect(function() toggleLogic(JumpToggle, JumpCirc
 SpeedBox.FocusLost:Connect(updateHumanoid)
 JumpBox.FocusLost:Connect(updateHumanoid)
 
--- Чистый Aimbot (на ближайшего врага без FOV)
+-- Чистый Aimbot (на ближайшего врага с лимитом дистанции, без фова и исключая себя)
 local aimbotActive = false
 local lockedTarget = nil
 
 local function isEnemy(player)
+    -- Исключаем самого себя
     if player == LocalPlayer then return false end
+    -- Исключаем тиммейтов (если они есть)
     if player.Team and LocalPlayer.Team and player.Team == LocalPlayer.Team then
         return false
     end
@@ -447,10 +454,12 @@ local function getClosestTarget()
     if not localHrp then return nil end
     
     local closestHead = nil
-    local shortestDist = math.huge
+    local maxDist = tonumber(DistanceBox.Text) or 500
+    local shortestDist = maxDist
     
     for _, p in ipairs(Players:GetPlayers()) do
-        if isEnemy(p) and p.Character then
+        -- Дополнительная проверка: p ~= LocalPlayer гарантирует, что мы не выберем себя
+        if p ~= LocalPlayer and isEnemy(p) and p.Character then
             local hum = p.Character:FindFirstChild("Humanoid")
             local head = p.Character:FindFirstChild("Head")
             local hrp = p.Character:FindFirstChild("HumanoidRootPart")
@@ -490,12 +499,15 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
--- Жёсткая фиксация камеры на выбранной цели пока аим включен
 RunService.RenderStepped:Connect(function()
     if aimbotActive then
-        -- Проверяем, жива ли текущая цель, если нет — ищем новую ближайшую
         if not lockedTarget or not lockedTarget.Parent or not lockedTarget.Parent:FindFirstChild("Humanoid") or lockedTarget.Parent.Humanoid.Health <= 0 then
             lockedTarget = getClosestTarget()
+        end
+        
+        -- Двойная защита: если цель случайно оказалась нашим собственным персонажем, сбрасываем её
+        if lockedTarget and lockedTarget:IsDescendantOf(LocalPlayer.Character) then
+            lockedTarget = nil
         end
         
         if lockedTarget then
@@ -503,6 +515,40 @@ RunService.RenderStepped:Connect(function()
         end
     else
         lockedTarget = nil
+    end
+end)
+
+-- Мощный FPS Boost (Удаление теней, текстур, уменьшение графики)
+local boostEnabled = false
+BoostToggle.MouseButton1Click:Connect(function()
+    boostEnabled = not boostEnabled
+    BoostCircle:TweenPosition(boostEnabled and UDim2.new(0, 23, 0.5, -8) or UDim2.new(0, 3, 0.5, -8), "Out", "Quad", 0.15, true)
+    BoostCircle.BackgroundColor3 = boostEnabled and Color3.new(1, 1, 1) or Color3.fromRGB(150, 150, 160)
+    BoostToggle.BackgroundColor3 = boostEnabled and Color3.fromRGB(90, 70, 200) or Color3.fromRGB(45, 45, 55)
+    
+    if boostEnabled then
+        settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 9e9
+        for _, v in ipairs(Lighting:GetChildren()) do
+            if v:IsA("PostEffect") or v:IsA("Sky") then
+                v.Enabled = false
+            end
+        end
+        if Terrain then
+            Terrain.WaterWaveSize = 0
+            Terrain.WaterWaveTransparency = 1
+            Terrain.WaterTransparency = 1
+            Terrain.WaterReflectance = 0
+        end
+        for _, part in ipairs(workspace:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Material = Enum.Material.SmoothPlastic
+                part.Reflectance = 0
+            elseif part:IsA("Decal") or part:IsA("Texture") then
+                part.Transparency = 1
+            end
+        end
     end
 end)
 
@@ -573,7 +619,7 @@ end)
 local SelectedTarget = nil
 local PlayerListFrame = Instance.new("ScrollingFrame", Container)
 PlayerListFrame.Size = UDim2.new(1, -20, 0, 130)
-PlayerListFrame.Position = UDim2.new(0, 10, 0, 420)
+PlayerListFrame.Position = UDim2.new(0, 10, 0, 480)
 PlayerListFrame.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
 PlayerListFrame.BackgroundTransparency = 0.3
 PlayerListFrame.BorderSizePixel = 0
@@ -618,7 +664,7 @@ updateList()
 
 local FlingBtn = Instance.new("TextButton", Container)
 FlingBtn.Size = UDim2.new(1, -20, 0, 36)
-FlingBtn.Position = UDim2.new(0, 10, 0, 560)
+FlingBtn.Position = UDim2.new(0, 10, 0, 620)
 FlingBtn.BackgroundColor3 = Color3.fromRGB(90, 70, 200)
 FlingBtn.Text = "START PRO FLING"
 FlingBtn.TextColor3 = Color3.new(1, 1, 1)
