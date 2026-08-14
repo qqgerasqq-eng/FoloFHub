@@ -1,4 +1,4 @@
--- FoloF Hub: ESP Distance, Adjustable Aimbot Distance, FOV, Team Check & Keybinds
+-- FoloF Hub: Hard Locked Aimbot (No FOV, Pure Closest Target, Team Check)
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
@@ -13,7 +13,7 @@ ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0, 300, 0, 420)
+MainFrame.Size = UDim2.new(0, 300, 0, 380)
 MainFrame.Position = UDim2.new(0, 100, 0, 100)
 MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 22)
 MainFrame.BackgroundTransparency = 0.25
@@ -41,7 +41,7 @@ Title.TextSize = 15
 Title.Font = Enum.Font.GothamBold
 Title.TextXAlignment = Enum.TextXAlignment.Left
 
--- Кнопки управления в шапке (Закрыть, Свернуть, Настройки [⚙], Инфо [?])
+-- Кнопки управления в шапке
 local CloseButton = Instance.new("TextButton", TopBar)
 CloseButton.Size = UDim2.new(0, 26, 0, 26)
 CloseButton.Position = UDim2.new(1, -31, 0, 9)
@@ -86,7 +86,7 @@ Instance.new("UICorner", InfoButton).CornerRadius = UDim.new(0, 6)
 local minimized = false
 MinimizeButton.MouseButton1Click:Connect(function()
     minimized = not minimized
-    local targetSize = minimized and UDim2.new(0, MainFrame.AbsoluteSize.X, 0, 45) or UDim2.new(0, MainFrame.AbsoluteSize.X, 0, 420)
+    local targetSize = minimized and UDim2.new(0, MainFrame.AbsoluteSize.X, 0, 45) or UDim2.new(0, MainFrame.AbsoluteSize.X, 0, 380)
     TweenService:Create(MainFrame, TweenInfo.new(0.3), {Size = targetSize}):Play()
     for _, child in ipairs(MainFrame:GetChildren()) do
         if child ~= TopBar and not child:IsA("UICorner") and not child:IsA("UIStroke") then
@@ -95,7 +95,7 @@ MinimizeButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- Окно НАСТРОЕК (регулировка размера GUI)
+-- Окно НАСТРОЕК
 local SettingsFrame = Instance.new("Frame", ScreenGui)
 SettingsFrame.Size = UDim2.new(0, 220, 0, 130)
 SettingsFrame.Position = UDim2.new(0, 420, 0, 100)
@@ -148,7 +148,7 @@ UserInputService.InputChanged:Connect(function(input)
         ResizeFill.Size = UDim2.new(p, 0, 1, 0)
         
         local newWidth = math.floor(240 + (p * 260))
-        local newHeight = math.floor(350 + (p * 250))
+        local newHeight = math.floor(320 + (p * 250))
         MainFrame.Size = UDim2.new(0, newWidth, 0, newHeight)
     end
 end)
@@ -166,9 +166,9 @@ Instance.new("UICorner", CloseSettingsBtn).CornerRadius = UDim.new(0, 6)
 CloseSettingsBtn.MouseButton1Click:Connect(function() SettingsFrame.Visible = false end)
 SettingsButton.MouseButton1Click:Connect(function() SettingsFrame.Visible = not SettingsFrame.Visible end)
 
--- Окно ИНФОРМАЦИИ [?]
+-- Окно ИНФОРМАЦИИ
 local InfoFrame = Instance.new("Frame", ScreenGui)
-InfoFrame.Size = UDim2.new(0, 240, 0, 185)
+InfoFrame.Size = UDim2.new(0, 240, 0, 175)
 InfoFrame.Position = UDim2.new(0, 420, 0, 100)
 InfoFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 32)
 InfoFrame.Visible = false
@@ -189,10 +189,10 @@ InfoTitle.TextSize = 14
 InfoTitle.Font = Enum.Font.GothamBold
 
 local InfoDesc = Instance.new("TextLabel", InfoFrame)
-InfoDesc.Size = UDim2.new(1, -20, 0, 90)
+InfoDesc.Size = UDim2.new(1, -20, 0, 80)
 InfoDesc.Position = UDim2.new(0, 10, 0, 40)
 InfoDesc.BackgroundTransparency = 1
-InfoDesc.Text = "FoloF Hub Ultimate Edition\nESP with Distance & Max Aim Distance\nPress 'B' to toggle Aimbot!"
+InfoDesc.Text = "FoloF Hub Ultimate Edition\nPure Closest Target Lock (No FOV)\nPress 'B' to toggle Aimbot!"
 InfoDesc.TextColor3 = Color3.fromRGB(200, 200, 210)
 InfoDesc.TextSize = 12
 InfoDesc.Font = Enum.Font.GothamMedium
@@ -216,7 +216,7 @@ local Container = Instance.new("ScrollingFrame", MainFrame)
 Container.Size = UDim2.new(1, 0, 1, -45)
 Container.Position = UDim2.new(0, 0, 0, 45)
 Container.BackgroundTransparency = 1
-Container.CanvasSize = UDim2.new(0, 0, 0, 880)
+Container.CanvasSize = UDim2.new(0, 0, 0, 780)
 Container.ScrollBarThickness = 4
 
 local function createSection(name, posY)
@@ -245,9 +245,7 @@ local JumpSection = createSection("Jump Power", 110)
 local FlySection = createSection("Fly Mode", 160)
 local NoclipSection = createSection("Noclip", 210)
 local FPSSection = createSection("FPS Counter", 260)
-local AimbotSection = createSection("Aimbot (Head)", 310)
-local AimFOVSection = createSection("Aim FOV Circle", 360)
-local AimDistSection = createSection("Max Aim Distance", 410)
+local AimbotSection = createSection("Aimbot (Head Lock)", 310)
 
 -- Переключатели
 local function createToggle(parent)
@@ -273,7 +271,6 @@ local FlyToggle, FlyCircle = createToggle(FlySection)
 local NoclipToggle, NoclipCircle = createToggle(NoclipSection)
 local FPSToggle, FPSCircle = createToggle(FPSSection)
 local AimToggle, AimCircle = createToggle(AimbotSection)
-local AimFOVToggle, AimFOVCircle = createToggle(AimFOVSection)
 
 -- Поля ввода
 local function createInput(parent, defaultText)
@@ -292,10 +289,8 @@ end
 local SpeedBox = createInput(SpeedSection, "50")
 local JumpBox = createInput(JumpSection, "50")
 local FlyBox = createInput(FlySection, "50")
-local FOVSizeBox = createInput(AimFOVSection, "120")
-local AimDistBox = createInput(AimDistSection, "500") -- Максимальная дистанция аима по умолчанию
 
--- ESP Логика (с отображением дистанции)
+-- ESP Логика
 local ESPColor = Color3.fromRGB(140, 0, 255)
 local ColorBtn = Instance.new("TextButton", ESPSection)
 ColorBtn.Size = UDim2.new(0, 22, 0, 22)
@@ -377,52 +372,6 @@ ESPToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- FOV Circle Drawing & Color Button
-local FOVColor = Color3.fromRGB(140, 0, 255)
-local FOVColorBtn = Instance.new("TextButton", AimFOVSection)
-FOVColorBtn.Size = UDim2.new(0, 22, 0, 22)
-FOVColorBtn.Position = UDim2.new(1, -80, 0.5, -11)
-FOVColorBtn.BackgroundColor3 = FOVColor
-FOVColorBtn.Text = ""
-Instance.new("UICorner", FOVColorBtn).CornerRadius = UDim.new(1, 0)
-
-local FOVCircleDrawing = Drawing.new("Circle")
-FOVCircleDrawing.Visible = false
-FOVCircleDrawing.Thickness = 1.5
-FOVCircleDrawing.NumSides = 64
-FOVCircleDrawing.Filled = false
-FOVCircleDrawing.Transparency = 0.8
-FOVCircleDrawing.Color = FOVColor
-
-local fovEnabled = false
-AimFOVToggle.MouseButton1Click:Connect(function()
-    fovEnabled = not fovEnabled
-    AimFOVCircle:TweenPosition(fovEnabled and UDim2.new(0, 23, 0.5, -8) or UDim2.new(0, 3, 0.5, -8), "Out", "Quad", 0.15, true)
-    AimFOVCircle.BackgroundColor3 = fovEnabled and Color3.new(1, 1, 1) or Color3.fromRGB(150, 150, 160)
-    AimFOVToggle.BackgroundColor3 = fovEnabled and Color3.fromRGB(90, 70, 200) or Color3.fromRGB(45, 45, 55)
-    FOVCircleDrawing.Visible = fovEnabled
-end)
-
-FOVColorBtn.MouseButton1Click:Connect(function()
-    if FOVColor == Color3.fromRGB(140, 0, 255) then
-        FOVColor = Color3.fromRGB(255, 50, 50)
-    elseif FOVColor == Color3.fromRGB(255, 50, 50) then
-        FOVColor = Color3.fromRGB(50, 255, 50)
-    elseif FOVColor == Color3.fromRGB(50, 255, 50) then
-        FOVColor = Color3.fromRGB(50, 150, 255)
-    else
-        FOVColor = Color3.fromRGB(140, 0, 255)
-    end
-    FOVColorBtn.BackgroundColor3 = FOVColor
-    FOVCircleDrawing.Color = FOVColor
-end)
-
-RunService.RenderStepped:Connect(function()
-    local viewportSize = Camera.ViewportSize
-    FOVCircleDrawing.Position = viewportSize / 2
-    FOVCircleDrawing.Radius = tonumber(FOVSizeBox.Text) or 120
-end)
-
 -- FPS Counter
 local fpsEnabled = false
 local fpsLabel = Instance.new("TextLabel", ScreenGui)
@@ -481,8 +430,10 @@ JumpToggle.MouseButton1Click:Connect(function() toggleLogic(JumpToggle, JumpCirc
 SpeedBox.FocusLost:Connect(updateHumanoid)
 JumpBox.FocusLost:Connect(updateHumanoid)
 
--- Aimbot с Team Check, FOV и регулируемой максимальной дистанцией
+-- Чистый Aimbot (на ближайшего врага без FOV)
 local aimbotActive = false
+local lockedTarget = nil
+
 local function isEnemy(player)
     if player == LocalPlayer then return false end
     if player.Team and LocalPlayer.Team and player.Team == LocalPlayer.Team then
@@ -491,43 +442,39 @@ local function isEnemy(player)
     return true
 end
 
-local function getClosestTargetInFOV()
-    local closestTarget = nil
-    local shortestDistance = math.huge
-    local fovRadius = tonumber(FOVSizeBox.Text) or 120
-    local maxAimDist = tonumber(AimDistBox.Text) or 500
-    local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+local function getClosestTarget()
     local localHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not localHrp then return nil end
+    
+    local closestHead = nil
+    local shortestDist = math.huge
     
     for _, p in ipairs(Players:GetPlayers()) do
-        if isEnemy(p) and p.Character and p.Character:FindFirstChild("Head") and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
-            local head = p.Character.Head
+        if isEnemy(p) and p.Character then
+            local hum = p.Character:FindFirstChild("Humanoid")
+            local head = p.Character:FindFirstChild("Head")
             local hrp = p.Character:FindFirstChild("HumanoidRootPart")
             
-            if localHrp and hrp then
-                local worldDist = (hrp.Position - localHrp.Position).Magnitude
-                if worldDist <= maxAimDist then
-                    local screenPos, onScreen = Camera:WorldToViewportPoint(head.Position)
-                    if onScreen then
-                        local screenPos2D = Vector2.new(screenPos.X, screenPos.Y)
-                        local distToCenter = (screenPos2D - screenCenter).Magnitude
-                        
-                        if distToCenter <= fovRadius then
-                            if distToCenter < shortestDistance then
-                                shortestDistance = distToCenter
-                                closestTarget = head
-                            end
-                        end
-                    end
+            if hum and head and hrp and hum.Health > 0 then
+                local dist = (hrp.Position - localHrp.Position).Magnitude
+                if dist < shortestDist then
+                    shortestDist = dist
+                    closestHead = head
                 end
             end
         end
     end
-    return closestTarget
+    
+    return closestHead
 end
 
 local function setAimbotState(state)
     aimbotActive = state
+    if not state then 
+        lockedTarget = nil 
+    else
+        lockedTarget = getClosestTarget()
+    end
     AimCircle:TweenPosition(aimbotActive and UDim2.new(0, 23, 0.5, -8) or UDim2.new(0, 3, 0.5, -8), "Out", "Quad", 0.15, true)
     AimToggle.BackgroundColor3 = aimbotActive and Color3.fromRGB(90, 70, 200) or Color3.fromRGB(45, 45, 55)
     AimCircle.BackgroundColor3 = aimbotActive and Color3.new(1, 1, 1) or Color3.fromRGB(150, 150, 160)
@@ -543,12 +490,19 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
+-- Жёсткая фиксация камеры на выбранной цели пока аим включен
 RunService.RenderStepped:Connect(function()
     if aimbotActive then
-        local targetHead = getClosestTargetInFOV()
-        if targetHead then 
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, targetHead.Position) 
+        -- Проверяем, жива ли текущая цель, если нет — ищем новую ближайшую
+        if not lockedTarget or not lockedTarget.Parent or not lockedTarget.Parent:FindFirstChild("Humanoid") or lockedTarget.Parent.Humanoid.Health <= 0 then
+            lockedTarget = getClosestTarget()
         end
+        
+        if lockedTarget then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, lockedTarget.Position)
+        end
+    else
+        lockedTarget = nil
     end
 end)
 
@@ -615,11 +569,11 @@ NoclipToggle.MouseButton1Click:Connect(function()
     end
 end)
 
--- Список игроков и Fling в скролле
+-- Список игроков и Fling
 local SelectedTarget = nil
 local PlayerListFrame = Instance.new("ScrollingFrame", Container)
 PlayerListFrame.Size = UDim2.new(1, -20, 0, 130)
-PlayerListFrame.Position = UDim2.new(0, 10, 0, 470)
+PlayerListFrame.Position = UDim2.new(0, 10, 0, 420)
 PlayerListFrame.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
 PlayerListFrame.BackgroundTransparency = 0.3
 PlayerListFrame.BorderSizePixel = 0
@@ -664,7 +618,7 @@ updateList()
 
 local FlingBtn = Instance.new("TextButton", Container)
 FlingBtn.Size = UDim2.new(1, -20, 0, 36)
-FlingBtn.Position = UDim2.new(0, 10, 0, 610)
+FlingBtn.Position = UDim2.new(0, 10, 0, 560)
 FlingBtn.BackgroundColor3 = Color3.fromRGB(90, 70, 200)
 FlingBtn.Text = "START PRO FLING"
 FlingBtn.TextColor3 = Color3.new(1, 1, 1)
